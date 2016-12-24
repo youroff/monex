@@ -50,27 +50,6 @@ defmodule MonEx.Result do
   def fallback(error(_), z), do: z
 
   @doc """
-  Unwraps x if ok(x), passes a value into function (x) -> z and returns ok(z) 
-  """
-  @spec map(t, (any -> any)) :: t
-  def map(ok(x), f) when is_function(f), do: ok(f.(x))
-  def map(error(m), f) when is_function(f), do: error(m)
-
-  @doc """
-  Unwraps x if ok(x), passes a value into function (x) -> result(z) and returns result(z)
-  """
-  @spec flat_map(t, (any -> t)) :: t
-  def flat_map(ok(x), f) when is_function(f), do: f.(x)
-  def flat_map(error(m), f) when is_function(f), do: error(m)
-
-  @doc """
-  Calls supplied function with x in ok(x), expecting no return
-  """
-  @spec foreach(t, (any -> no_return)) :: no_return
-  def foreach(ok(x), f) when is_function(f), do: f.(x)
-  def foreach(error(_), _), do: ()
-
-  @doc """
   Filters collection or results so that only oks left
   """
   @spec collect_ok([t]) :: [term]

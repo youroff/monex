@@ -2,6 +2,7 @@ defmodule MonExResultTest do
   use ExUnit.Case
   doctest MonEx.Result
   import MonEx.Result
+  import MonEx
 
   test "basic" do
     a = ok(5)

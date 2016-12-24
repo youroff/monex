@@ -2,6 +2,7 @@ defmodule MonExOptionTest do
   use ExUnit.Case
   doctest MonEx.Option
   import MonEx.Option
+  import MonEx
 
   test "basic" do
     a = some(5)

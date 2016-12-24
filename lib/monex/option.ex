@@ -55,25 +55,4 @@ defmodule MonEx.Option do
   @spec get_or_else(t, term) :: term
   def get_or_else(some(x), _), do: x
   def get_or_else(none(), z), do: z
-
-  @doc """
-  Unwraps option if some(), passes a value into function and wraps the result back to option 
-  """
-  @spec map(t, (term -> term)) :: t
-  def map(some(x), f) when is_function(f), do: some(f.(x))
-  def map(none(), f) when is_function(f), do: none
-
-  @doc """
-  Unwraps option if some(), passes a value into function and returns the result (assuming that function returns option) 
-  """
-  @spec flat_map(t, (term -> t)) :: t
-  def flat_map(some(x), f) when is_function(f), do: f.(x)
-  def flat_map(none(), f) when is_function(f), do: none
-
-  @doc """
-  Calls supplied function with an argument in some(), expecting no return
-  """
-  @spec foreach(t, (term -> no_return)) :: no_return
-  def foreach(some(x), f) when is_function(f), do: f.(x)
-  def foreach(none(), _), do: ()
 end
