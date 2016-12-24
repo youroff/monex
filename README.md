@@ -1,6 +1,6 @@
 # Monex
 
-Basic collection of monadic types for Elixir. See docs.
+Basic collection of monadic types for Elixir. See [docs](https://hexdocs.pm/monex/api-reference.html).
 
 ## Installation
 
