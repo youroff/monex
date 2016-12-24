@@ -26,7 +26,7 @@ defmodule Monex.Mixfile do
   end
   
   defp package, do: [
-   files: ["lib", "mix.exs", "README*", "readme*", "LICENSE*", "license*"],
+   files: ["lib", "mix.exs", "README*", "LICENSE*"],
    maintainers: ["Ivan Yurov"],
    licenses: ["Apache 2.0"],
    links: %{"GitHub" => "https://github.com/youroff/monex"}
