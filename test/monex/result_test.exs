@@ -63,4 +63,34 @@ defmodule MonExResultTest do
   test "collect_error" do
     assert ["Err"] == collect_error [ok(1), ok(2), error("Err")]
   end
+
+  test "retry" do
+    res = retry do
+      error("Aw")
+    end
+    assert res == error("Aw")
+    
+    res = retry do
+      ok("Yay")
+    end
+    assert res == ok("Yay")
+  end
+
+  test "retry non-idempotent" do
+    ok(counter) = Agent.start_link fn -> 0 end
+    task = fn ->
+      Agent.update(counter, & &1 + 1)
+      if Agent.get(counter, & &1) > 5 do
+        ok("Yay")
+      else
+        error("Nay")
+      end    
+    end
+
+    res = retry [n: 3], do: task.()
+    assert res == error("Nay")
+
+    res = retry [n: 3], do: task.()
+    assert res == ok("Yay")
+  end
 end

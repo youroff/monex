@@ -68,4 +68,22 @@ defmodule MonEx.Result do
     |> Enum.filter(&is_error/1)
     |> Enum.map(fn error(m) -> m end)
   end
+
+  defmacro retry(opts \\ [], do: exp) do
+    quote do
+      n = Keyword.get(unquote(opts), :n, 5)
+      delay = Keyword.get(unquote(opts), :delay, 0)
+      retry_rec(n, delay, fn -> unquote(exp) end)
+    end
+  end
+
+  def retry_rec(0, delay, lambda), do: lambda.()
+  def retry_rec(n, delay, lambda) do
+    case lambda.() do
+      error(_) ->
+        :timer.sleep(delay)
+        retry_rec(n - 1, delay, lambda)
+      ok -> ok
+    end
+  end
 end
