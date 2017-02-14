@@ -77,7 +77,7 @@ defmodule MonEx.Result do
     end
   end
 
-  def retry_rec(0, delay, lambda), do: lambda.()
+  def retry_rec(0, _delay, lambda), do: lambda.()
   def retry_rec(n, delay, lambda) do
     case lambda.() do
       error(_) ->

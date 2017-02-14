@@ -15,7 +15,7 @@ defmodule MonEx do
   """
   @spec map(monadic, (term -> term)) :: monadic
   def map(some(x), f) when is_function(f, 1), do: some(f.(x))
-  def map(none(), f) when is_function(f, 1), do: none
+  def map(none(), f) when is_function(f, 1), do: none()
 
   def map(ok(x), f) when is_function(f, 1), do: ok(f.(x))
   def map(error(m), f) when is_function(f, 1), do: error(m)
@@ -30,7 +30,7 @@ defmodule MonEx do
   """
   @spec flat_map(monadic, (term -> monadic)) :: monadic
   def flat_map(some(x), f) when is_function(f, 1), do: f.(x)
-  def flat_map(none(), f) when is_function(f, 1), do: none
+  def flat_map(none(), f) when is_function(f, 1), do: none()
 
   def flat_map(ok(x), f) when is_function(f, 1), do: f.(x)
   def flat_map(error(m), f) when is_function(f, 1), do: error(m)

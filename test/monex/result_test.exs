@@ -41,7 +41,7 @@ defmodule MonExResultTest do
   end
 
   test "foreach" do
-    me = self
+    me = self()
     ok(5) |> foreach(&(send me, &1))
     error("Some err") |> foreach(fn -> send me, "WTF" end)
     :timer.sleep(1)

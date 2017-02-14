@@ -39,7 +39,7 @@ defmodule MonEx.Option do
   Converts arbitrary term into option, some(term) if not nil, none() otherwise
   """
   @spec to_option(term) :: t
-  def to_option(nil), do: none
+  def to_option(nil), do: none()
   def to_option(x), do: some(x)
 
   @doc """
