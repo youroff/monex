@@ -43,11 +43,11 @@ defmodule MonEx.Result do
   def unwrap(error(m)), do: raise m
 
   @doc """
-  Returns value x if argument is ok(x), second argument z if error.
+  Returns value if it is ok, or evaluates supplied lambda that expected to return another result.
   """
-  @spec fallback(t, term) :: term
-  def fallback(ok(x), _), do: x
-  def fallback(error(_), z), do: z
+  @spec fallback(t, (term -> t)) :: t
+  def fallback(ok(x), _), do: ok(x)
+  def fallback(error(m), f), do: f.(m)
 
   @doc """
   Filters collection or results so that only oks left

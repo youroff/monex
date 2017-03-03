@@ -3,7 +3,7 @@ defmodule MonEx do
   A collection of simple monadic types: Option, Result.
   """
   import MonEx.{Option, Result}
-  @type monadic :: Option.t | Result.t
+  @type monadic :: MonEx.Option.t | MonEx.Result.t
 
   @doc """
   Applies function to content of monadic type:

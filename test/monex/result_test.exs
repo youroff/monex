@@ -26,8 +26,8 @@ defmodule MonExResultTest do
   end
   
   test "fallback" do
-    assert ok(5) |> fallback(1) == 5
-    assert error("WTF") |> fallback(1) == 1
+    assert ok(5) |> fallback(fn _ -> 1 end) == ok(5)
+    assert error("WTF") |> fallback(fn m -> ok("#{m}LOL") end) == ok("WTFLOL")
   end
 
   test "map" do
