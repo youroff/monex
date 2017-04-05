@@ -7,10 +7,10 @@ defmodule MonExResultTest do
   test "basic" do
     a = ok(5)
     b = error("WTF??")
-    
+
     assert {:ok, 5} == a
     assert {:error, "WTF??"} == b
-    
+
     ok(x) = a
     assert x == 5
   end
@@ -24,7 +24,7 @@ defmodule MonExResultTest do
     assert is_error(error("Error"))
     refute is_error(ok(5))
   end
-  
+
   test "fallback" do
     assert ok(5) |> fallback(fn _ -> 1 end) == ok(5)
     assert error("WTF") |> fallback(fn m -> ok("#{m}LOL") end) == ok("WTFLOL")
@@ -42,20 +42,22 @@ defmodule MonExResultTest do
 
   test "foreach" do
     me = self()
-    ok(5) |> foreach(&(send me, &1))
-    error("Some err") |> foreach(fn -> send me, "WTF" end)
+    res = ok(5) |> foreach(&(send me, &1))
+    assert res == ok(5)
+    res = error("Some err") |> foreach(fn -> send me, "WTF" end)
+    assert res == error("Some err")
     :timer.sleep(1)
     assert_received 5
     refute_received "WTF"
   end
-  
+
   test "unwrap" do
     assert 5 == unwrap(ok(5))
     assert_raise RuntimeError, "something bad happened", fn ->
       unwrap(error("something bad happened"))
     end
   end
-  
+
   test "collect_ok" do
     assert [1, 2] == collect_ok [ok(1), ok(2), error("Err")]
   end
@@ -69,7 +71,7 @@ defmodule MonExResultTest do
       error("Aw")
     end
     assert res == error("Aw")
-    
+
     res = retry do
       ok("Yay")
     end
@@ -84,7 +86,7 @@ defmodule MonExResultTest do
         ok("Yay")
       else
         error("Nay")
-      end    
+      end
     end
 
     res = retry [n: 3], do: task.()

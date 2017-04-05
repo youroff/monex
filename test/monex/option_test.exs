@@ -15,22 +15,27 @@ defmodule MonExOptionTest do
     assert x == 5
     assert none() = b
   end
-  
+
   test "is_some" do
     assert is_some(some(5))
     refute is_some(none())
   end
-  
+
   test "is_none" do
     assert is_none(none())
     refute is_none(some(5))
   end
-  
+
   test "to_option" do
     a = to_option(5)
     b = to_option(nil)
     assert some(5) == a
     assert none() == b
+  end
+
+  test "or_else" do
+    assert some(5) |> or_else(1) == some(5)
+    assert none() |> or_else(1) == some(1)
   end
 
   test "get" do
@@ -57,8 +62,10 @@ defmodule MonExOptionTest do
 
   test "foreach" do
     me = self()
-    some(5) |> foreach(&(send me, &1))
-    none() |> foreach(fn -> send me, "WTF" end)
+    res = some(5) |> foreach(&(send me, &1))
+    assert res == some(5)
+    res = none() |> foreach(fn -> send me, "WTF" end)
+    assert res == none()
     :timer.sleep(1)
     assert_received 5
     refute_received "WTF"

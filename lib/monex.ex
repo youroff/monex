@@ -7,7 +7,7 @@ defmodule MonEx do
 
   @doc """
   Applies function to content of monadic type:
-  
+
   Example:
     f = fn (x) -> x * 2 end
     some(5) |> map(f) == some(10)
@@ -22,7 +22,7 @@ defmodule MonEx do
 
   @doc """
   Applies function returning to content of monadic type:
-  
+
   Example:
     inverse = fn (x) -> if x == 0, do: none(), else: some(1/x) end
     some(5) |> flat_map(f) == some(1/5)
@@ -36,12 +36,12 @@ defmodule MonEx do
   def flat_map(error(m), f) when is_function(f, 1), do: error(m)
 
   @doc """
-  Calls supplied function with content of monadic type as an argument, expecting no return
+  Calls supplied function with content of monadic type as an argument, returns argument intact
   """
-  @spec foreach(monadic, (term -> no_return)) :: no_return
-  def foreach(some(x), f) when is_function(f, 1), do: f.(x)
-  def foreach(none(), _), do: ()
-  
-  def foreach(ok(x), f) when is_function(f, 1), do: f.(x)
-  def foreach(error(_), _), do: ()
+  @spec foreach(monadic, (term -> no_return)) :: monadic
+  def foreach(some(x) = res, f) when is_function(f, 1), do: (f.(x); res)
+  def foreach(none() = z, _), do: z
+
+  def foreach(ok(x) = res, f) when is_function(f, 1), do: (f.(x); res)
+  def foreach(error(_) = z, _), do: z
 end

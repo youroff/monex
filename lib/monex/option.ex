@@ -43,6 +43,13 @@ defmodule MonEx.Option do
   def to_option(x), do: some(x)
 
   @doc """
+  Returns option if argument is some(), second argument wrapped in some otherwise
+  """
+  @spec or_else(t, term) :: t
+  def or_else(some(_) = x, _), do: x
+  def or_else(none(), z), do: some(z)
+
+  @doc """
   Returns content of option if argument is some(), raises otherwise
   """
   @spec get(t) :: term

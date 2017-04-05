@@ -3,7 +3,7 @@ defmodule Monex.Mixfile do
 
   def project do
     [app: :monex,
-     version: "0.1.4",
+     version: "0.1.5",
      elixir: "~> 1.4",
      description: description(),
      package: package(),
@@ -24,7 +24,7 @@ defmodule Monex.Mixfile do
     * Result
     """
   end
-  
+
   defp package, do: [
    files: ["lib", "mix.exs", "README*", "LICENSE*"],
    maintainers: ["Ivan Yurov"],
