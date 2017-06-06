@@ -36,6 +36,7 @@ defmodule MonExOptionTest do
   test "or_else" do
     assert some(5) |> or_else(1) == some(5)
     assert none() |> or_else(1) == some(1)
+    assert none() |> or_else(fn -> some(4) end) == some(4)
   end
 
   test "get" do
@@ -48,6 +49,7 @@ defmodule MonExOptionTest do
   test "get_or_else" do
     assert some(5) |> get_or_else(1) == 5
     assert none() |> get_or_else(1) == 1
+    assert none() |> or_else(fn -> 4 end) == 4
   end
 
   test "map" do

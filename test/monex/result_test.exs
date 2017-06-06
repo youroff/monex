@@ -13,6 +13,10 @@ defmodule MonExResultTest do
 
     ok(x) = a
     assert x == 5
+
+    # 2 error messages
+    c = error({"OMG", "LOL"})
+    assert {:error, "OMG", "LOL"} == c
   end
 
   test "is_ok" do
@@ -28,6 +32,7 @@ defmodule MonExResultTest do
   test "fallback" do
     assert ok(5) |> fallback(fn _ -> 1 end) == ok(5)
     assert error("WTF") |> fallback(fn m -> ok("#{m}LOL") end) == ok("WTFLOL")
+    assert error("WTF") |> fallback(ok(5)) == ok(5)
   end
 
   test "map" do
@@ -89,10 +94,13 @@ defmodule MonExResultTest do
       end
     end
 
-    res = retry [n: 3], do: task.()
+    res = retry n: 3 do
+      task.()
+    end
     assert res == error("Nay")
 
     res = retry [n: 3], do: task.()
     assert res == ok("Yay")
+    Agent.stop(counter)
   end
 end
