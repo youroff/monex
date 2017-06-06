@@ -56,7 +56,7 @@ defmodule MonEx do
   This will only request for posts if the user was found. Then content of `some()`
   will be transformed into posts, or `none()` will be returned.
 
-  See dosc per Result and Option modules for details.
+  See docs per Result and Option modules for details.
   """
   import MonEx.{Option, Result}
   @type monadic :: MonEx.Option.t | MonEx.Result.t

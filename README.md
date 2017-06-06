@@ -56,7 +56,7 @@ same set of functions, such as `map`, `flat_map`, etc.
 This will only request for posts if the user was found. Then content of `some()`
 will be transformed into posts, or `none()` will be returned.
 
-See dosc per Result and Option modules for details. [docs](https://hexdocs.pm/monex/api-reference.html).
+See docs per Result and Option modules for details. [docs](https://hexdocs.pm/monex/api-reference.html).
 
 ## Installation
 
