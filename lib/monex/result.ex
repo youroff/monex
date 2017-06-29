@@ -110,6 +110,7 @@ defmodule MonEx.Result do
     end
   end
 
+  @doc false
   def retry_rec(0, _delay, lambda), do: lambda.()
   def retry_rec(n, delay, lambda) do
     case lambda.() do
@@ -117,6 +118,44 @@ defmodule MonEx.Result do
         :timer.sleep(delay)
         retry_rec(n - 1, delay, lambda)
       ok -> ok
+    end
+  end
+
+  @doc """
+  Wraps expression and returns exception wrapped into `error()` if it happens,
+  otherwise `ok(result of expression)`.
+
+  Possible modes:
+    * `:full` - returns exception struct intact (default)
+    * `:message` — returns error message only
+    * `:module` — returns error module only
+
+  ##Example
+      try_result do
+        5 + 5
+      end == ok(10)
+
+      try_result do
+        5 / 0
+      end == error(%ArithmeticError{message: "bad argument in arithmetic expression"})
+
+      try_result :message do
+        5 / 0
+      end == error("bad argument in arithmetic expression")
+  """
+
+  # TODO: figure out @spec for this, if it's even possible
+  defmacro try_result(mode \\ :full, do: exp) do
+    quote do
+      try do
+        ok(unquote(exp))
+      rescue
+        e -> case unquote(mode) do
+          :message -> error(e.message)
+          :module -> error(e.__struct__)
+          _ -> error(e)
+        end
+      end
     end
   end
 end

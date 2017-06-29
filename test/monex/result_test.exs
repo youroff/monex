@@ -103,4 +103,18 @@ defmodule MonExResultTest do
     assert res == ok("Yay")
     Agent.stop(counter)
   end
+
+  test "try_result" do
+    res = try_result do
+      5 + 5
+    end
+    assert res == ok(10)
+
+    res = try_result do
+      5 / 0
+    end
+    assert res == error(%ArithmeticError{message: "bad argument in arithmetic expression"})
+    assert error("bad argument in arithmetic expression") == try_result :message, do: 5 / 0
+    assert error(ArithmeticError) == try_result :module, do: 5 / 0
+  end
 end
