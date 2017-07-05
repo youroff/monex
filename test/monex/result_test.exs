@@ -105,6 +105,9 @@ defmodule MonExResultTest do
   end
 
   test "try_result" do
+    assert ok(10) == try_result(do: ok(10))
+    assert error(:oh) == try_result(do: error(:oh))
+
     res = try_result do
       5 + 5
     end

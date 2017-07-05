@@ -148,7 +148,11 @@ defmodule MonEx.Result do
   defmacro try_result(mode \\ :full, do: exp) do
     quote do
       try do
-        ok(unquote(exp))
+        case unquote(exp) do
+          ok(res) -> ok(res)
+          error(e) -> error(e)
+          x -> ok(x)
+        end
       rescue
         e -> case unquote(mode) do
           :message -> error(e.message)
