@@ -123,7 +123,8 @@ defmodule MonEx.Result do
 
   @doc """
   Wraps expression and returns exception wrapped into `error()` if it happens,
-  otherwise `ok(result of expression)`.
+  otherwise `ok(result of expression)`, in case if expression returns result
+  type, it won't be wrapped.
 
   Possible modes:
     * `:full` - returns exception struct intact (default)
