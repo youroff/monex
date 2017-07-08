@@ -46,10 +46,14 @@ defmodule MonEx.Result do
   @doc """
   Returns value `x` if argument is `ok(x)`, raises `e` if `error(e)`
       5 == unwrap(ok(5))
+      10 == unwrap(error(:uh_oh), 10)
   """
-  @spec unwrap(t) :: term
-  def unwrap(ok(x)), do: x
-  def unwrap(error(m)), do: raise m
+  @spec unwrap(t, term) :: term
+  def unwrap(result, fallback \\ nil)
+  def unwrap(ok(x), _), do: x
+  def unwrap(error(m), nil), do: raise m
+  def unwrap(error(m), f) when is_function(f, 1), do: f.(m)
+  def unwrap(error(m), fallback), do: fallback
 
   @doc """
   Returns monad if it is `ok()`, or evaluates supplied lambda that expected
@@ -57,13 +61,15 @@ defmodule MonEx.Result do
       ok(5) |> fallback(fn _ -> 1 end) == ok(5)
       error("WTF") |> fallback(fn m -> ok("\#{m}LOL") end) == ok("WTFLOL")
       error("WTF") |> fallback(ok(5)) == ok(5)
+      error("WTF") |> fallback(5) == ok(5)
   """
-  @spec fallback(t, t | (term -> t)) :: t
+  @spec fallback(t, term | (term -> t)) :: t
   def fallback(ok(x), _), do: ok(x)
   def fallback(error(m), f) when is_function(f, 1) do
     f.(m)
   end
-  def fallback(error(m), x), do: x
+  def fallback(error(m), ok(x)), do: ok(x)
+  def fallback(error(m), x), do: ok(x)
 
   @doc """
   Filters collection of results, leaving only ok's

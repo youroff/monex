@@ -33,6 +33,7 @@ defmodule MonExResultTest do
     assert ok(5) |> fallback(fn _ -> 1 end) == ok(5)
     assert error("WTF") |> fallback(fn m -> ok("#{m}LOL") end) == ok("WTFLOL")
     assert error("WTF") |> fallback(ok(5)) == ok(5)
+    assert error("WTF") |> fallback(5) == ok(5)
   end
 
   test "map" do
@@ -61,6 +62,8 @@ defmodule MonExResultTest do
     assert_raise RuntimeError, "something bad happened", fn ->
       unwrap(error("something bad happened"))
     end
+    assert 10 == unwrap(error(:uh_oh), 10)
+    assert error("WTF") |> unwrap(fn m -> "#{m}LOL" end) == "WTFLOL"
   end
 
   test "collect_ok" do

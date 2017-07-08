@@ -3,7 +3,7 @@ defmodule Monex.Mixfile do
 
   def project do
     [app: :monex,
-     version: "0.1.8",
+     version: "0.1.9",
      elixir: "~> 1.4",
      description: description(),
      package: package(),
