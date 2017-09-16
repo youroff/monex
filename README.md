@@ -1,5 +1,7 @@
 # Monex
 
+[![Build Status](https://travis-ci.org/youroff/monex.svg?branch=master)](https://travis-ci.org/youroff/monex)
+
 MonEx implements two most common monadic data types:
 
   * `MonEx.Result` - container for a result of operation or error.
