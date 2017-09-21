@@ -13,10 +13,6 @@ defmodule MonExResultTest do
 
     ok(x) = a
     assert x == 5
-
-    # 2 error messages
-    c = error({"OMG", "LOL"})
-    assert {:error, "OMG", "LOL"} == c
   end
 
   test "is_ok" do

@@ -10,12 +10,6 @@ defmodule MonEx.Result do
     end
   end
 
-  defmacro error({e1, e2}) do
-    quote do
-      {:error, unquote(e1), unquote(e2)}
-    end
-  end
-
   defmacro error(err) do
     quote do
       {:error, unquote(err)}
