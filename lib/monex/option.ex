@@ -2,8 +2,7 @@ defmodule MonEx.Option do
   @moduledoc """
   Option module provides Option type with utility functions.
   """
-  require Record
-
+  
   defmacro some(val) do
     quote do
       {:some, unquote(val)}

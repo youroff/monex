@@ -12,7 +12,7 @@ defmodule Monex.Mixfile do
 
   def application, do: []
   defp deps, do: [
-    {:dialyxir, "~> 0.4", only: [:dev], runtime: false},
+    {:dialyxir, "~> 0.5.1", only: [:dev], runtime: false},
     {:ex_doc, "~> 0.14", only: :dev}
   ]
 

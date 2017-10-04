@@ -2,7 +2,6 @@ defmodule MonEx.Result do
   @moduledoc """
   Result module provides Result type with utility functions.
   """
-  require Record
 
   defmacro ok(res) do
     quote do
@@ -42,12 +41,12 @@ defmodule MonEx.Result do
       5 == unwrap(ok(5))
       10 == unwrap(error(:uh_oh), 10)
   """
-  @spec unwrap(t, term) :: term
+  @spec unwrap(t, term | (term -> term)) :: term
   def unwrap(result, fallback \\ nil)
   def unwrap(ok(x), _), do: x
   def unwrap(error(m), nil), do: raise m
   def unwrap(error(m), f) when is_function(f, 1), do: f.(m)
-  def unwrap(error(m), fallback), do: fallback
+  def unwrap(error(_), fallback), do: fallback
 
   @doc """
   Returns monad if it is `ok()`, or evaluates supplied lambda that expected
@@ -57,13 +56,13 @@ defmodule MonEx.Result do
       error("WTF") |> fallback(ok(5)) == ok(5)
       error("WTF") |> fallback(5) == ok(5)
   """
-  @spec fallback(t, term | (term -> t)) :: t
+  @spec fallback(t, t | (term -> t)) :: t
   def fallback(ok(x), _), do: ok(x)
   def fallback(error(m), f) when is_function(f, 1) do
     f.(m)
   end
-  def fallback(error(m), ok(x)), do: ok(x)
-  def fallback(error(m), x), do: ok(x)
+  def fallback(error(_), ok(x)), do: ok(x)
+  def fallback(error(_), error(x)), do: error(x)
 
   @doc """
   Filters collection of results, leaving only ok's
