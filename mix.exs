@@ -3,7 +3,7 @@ defmodule Monex.Mixfile do
 
   def project do
     [app: :monex,
-     version: "0.1.10",
+     version: "0.1.11",
      elixir: "~> 1.4",
      description: description(),
      package: package(),
@@ -12,8 +12,8 @@ defmodule Monex.Mixfile do
 
   def application, do: []
   defp deps, do: [
-    {:dialyxir, "~> 0.5.1", only: [:dev], runtime: false},
-    {:ex_doc, "~> 0.14", only: :dev}
+    {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
+    {:ex_doc, "~> 0.19", only: :dev}
   ]
 
   defp description do

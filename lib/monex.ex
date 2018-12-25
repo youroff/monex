@@ -59,7 +59,8 @@ defmodule MonEx do
   See docs per Result and Option modules for details.
   """
   import MonEx.{Option, Result}
-  @type monadic :: MonEx.Option.t | MonEx.Result.t
+  alias MonEx.{Option, Result}
+  @typep m(a, b) :: Option.t(a) | Result.t(a, b)
 
   @doc """
   Transforms the content of monadic type.
@@ -73,7 +74,7 @@ defmodule MonEx do
       some(5) |> map(f) == some(10)
       none() |> map(f) == none()
   """
-  @spec map(monadic, (term -> term)) :: monadic
+  @spec map(m(a, b), (a -> c)) :: m(c, b) when a: any, b: any, c: any
   def map(some(x), f) when is_function(f, 1), do: some(f.(x))
   def map(none(), f) when is_function(f, 1), do: none()
 
@@ -95,7 +96,7 @@ defmodule MonEx do
       some(5) |> flat_map(f) == some(1/5)
       some(0) |> flat_map(f) == none()
   """
-  @spec flat_map(monadic, (term -> monadic)) :: monadic
+  @spec flat_map(m(a, b), (a -> m(c, b))) :: m(c, b) when a: any, b: any, c: any
   def flat_map(some(x), f) when is_function(f, 1), do: f.(x)
   def flat_map(none(), f) when is_function(f, 1), do: none()
 
@@ -114,7 +115,7 @@ defmodule MonEx do
 
   This will print: 5 10
   """
-  @spec foreach(monadic, (term -> no_return)) :: monadic
+  @spec foreach(m(a, b), (a -> no_return)) :: m(a, b) when a: any, b: any
   def foreach(some(x) = res, f) when is_function(f, 1), do: (f.(x); res)
   def foreach(none() = z, _), do: z
 

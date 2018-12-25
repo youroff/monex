@@ -19,13 +19,13 @@ defmodule MonEx.Result do
   Result type.
   `ok(x)` or `error(err)` unwraps into `{:ok, x}` or `{:error, err}`
   """
-  @type t :: {:ok, term} | {:error, term}
+  @type t(res, err) :: {:ok, res} | {:error, err}
 
   @doc """
   Returns true if argument is `ok()`, false if `error()`
       is_ok(ok(5)) == true
   """
-  @spec is_ok(t) :: boolean
+  @spec is_ok(t(any, any)) :: boolean
   def is_ok(ok(_)), do: true
   def is_ok(error(_)), do: false
 
@@ -33,7 +33,7 @@ defmodule MonEx.Result do
   Returns true if argument is `error()`, false if `ok()`
       is_error(error("Error")) == true
   """
-  @spec is_error(t) :: boolean
+  @spec is_error(t(any, any)) :: boolean
   def is_error(x), do: !is_ok(x)
 
   @doc """
@@ -41,7 +41,7 @@ defmodule MonEx.Result do
       5 == unwrap(ok(5))
       10 == unwrap(error(:uh_oh), 10)
   """
-  @spec unwrap(t, term | (term -> term)) :: term
+  @spec unwrap(t(res, err), res | (err -> res)) :: res when res: any, err: any
   def unwrap(result, fallback \\ nil)
   def unwrap(ok(x), _), do: x
   def unwrap(error(m), nil), do: raise m
@@ -56,7 +56,7 @@ defmodule MonEx.Result do
       error("WTF") |> fallback(ok(5)) == ok(5)
       error("WTF") |> fallback(5) == ok(5)
   """
-  @spec fallback(t, t | (term -> t)) :: t
+  @spec fallback(t(res, err), t(res, err) | (err -> t(res, err))) :: t(res, err) when res: any, err: any
   def fallback(ok(x), _), do: ok(x)
   def fallback(error(m), f) when is_function(f, 1) do
     f.(m)
@@ -68,7 +68,7 @@ defmodule MonEx.Result do
   Filters collection of results, leaving only ok's
       [ok(1), error("oops")] |> collect_ok == [ok(1)]
   """
-  @spec collect_ok([t]) :: [term]
+  @spec collect_ok([t(res, any)]) :: [res] when res: any
   def collect_ok(results) when is_list(results) do
     results
     |> Enum.filter(&is_ok/1)
@@ -79,7 +79,7 @@ defmodule MonEx.Result do
   Filters collection of results, leaving only errors:
       [ok(1), error("oops")] |> collect_error == [error("oops")]
   """
-  @spec collect_error([t]) :: [term]
+  @spec collect_error([t(res, err)]) :: [err] when res: any, err: any
   def collect_error(results) when is_list(results) do
     results
     |> Enum.filter(&is_error/1)
@@ -100,7 +100,6 @@ defmodule MonEx.Result do
 
   This will call `remove_service()` 4 times (1 time + 3 retries) with an interval of 3 seconds.
   """
-
   defmacro retry(opts \\ [], do: exp) do
     quote do
       n = Keyword.get(unquote(opts), :n, 5)
@@ -110,6 +109,7 @@ defmodule MonEx.Result do
   end
 
   @doc false
+  @spec retry_rec(integer, integer, (() -> t(res, err))) :: t(res, err) when res: any, err: any
   def retry_rec(0, _delay, lambda), do: lambda.()
   def retry_rec(n, delay, lambda) do
     case lambda.() do
