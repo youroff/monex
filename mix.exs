@@ -3,7 +3,7 @@ defmodule Monex.Mixfile do
 
   def project do
     [app: :monex,
-     version: "0.1.11",
+     version: "0.1.12",
      elixir: "~> 1.4",
      description: description(),
      package: package(),
@@ -18,10 +18,7 @@ defmodule Monex.Mixfile do
 
   defp description do
     """
-    Monadic types collection
-    Currently implemented:
-    * Option
-    * Result
+    Monadic types collection. Option (Maybe) - some(val)/none(). Result - ok(val)/error(err).
     """
   end
 

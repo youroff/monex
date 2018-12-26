@@ -17,13 +17,19 @@ defmodule MonEx.Result do
 
   @typedoc """
   Result type.
-  `ok(x)` or `error(err)` unwraps into `{:ok, x}` or `{:error, err}`
+  `ok(res)` or `error(err)` unwraps into `{:ok, res}` or `{:error, err}`
   """
   @type t(res, err) :: {:ok, res} | {:error, err}
 
   @doc """
   Returns true if argument is `ok()`, false if `error()`
-      is_ok(ok(5)) == true
+
+  ## Examples
+      iex> is_ok(ok(5))
+      true
+
+      iex> is_error(ok(5))
+      false
   """
   @spec is_ok(t(any, any)) :: boolean
   def is_ok(ok(_)), do: true
@@ -31,15 +37,30 @@ defmodule MonEx.Result do
 
   @doc """
   Returns true if argument is `error()`, false if `ok()`
-      is_error(error("Error")) == true
+
+  ## Examples
+      iex> is_error(error("Error"))
+      true
+
+      iex> is_ok(error("Error"))
+      false
   """
   @spec is_error(t(any, any)) :: boolean
   def is_error(x), do: !is_ok(x)
 
   @doc """
-  Returns value `x` if argument is `ok(x)`, raises `e` if `error(e)`
-      5 == unwrap(ok(5))
-      10 == unwrap(error(:uh_oh), 10)
+  Returns value `x` if argument is `ok(x)`, raises `e` if `error(e)`.
+  Second argument is a fallback. It can by a lambda accepting error, or some precomputed default value.
+
+  ## Examples
+      iex> unwrap(ok(5))
+      5
+
+      iex> unwrap(error(:uh_oh), fn _ -> 10 end)
+      10
+
+      iex> unwrap(error(:uh_oh), 10)
+      10
   """
   @spec unwrap(t(res, err), res | (err -> res)) :: res when res: any, err: any
   def unwrap(result, fallback \\ nil)
@@ -49,41 +70,72 @@ defmodule MonEx.Result do
   def unwrap(error(_), fallback), do: fallback
 
   @doc """
-  Returns monad if it is `ok()`, or evaluates supplied lambda that expected
-  to return another `result`. Returns supplied fallback value, if it's not a function.
-      ok(5) |> fallback(fn _ -> 1 end) == ok(5)
-      error("WTF") |> fallback(fn m -> ok("\#{m}LOL") end) == ok("WTFLOL")
-      error("WTF") |> fallback(ok(5)) == ok(5)
-      error("WTF") |> fallback(5) == ok(5)
+  Returns self if it is `ok(x)`, or evaluates supplied lambda that expected
+  to return another `result`. Returns supplied fallback result, if second argument is not a function.
+
+  ## Examples
+      iex> ok(5) |> fallback(fn _ -> 1 end)
+      ok(5)
+
+      iex> error("WTF") |> fallback(fn m -> ok("\#{m}LOL") end)
+      ok("WTFLOL")
+
+      iex> error("WTF") |> fallback(ok(5))
+      ok(5)
   """
   @spec fallback(t(res, err), t(res, err) | (err -> t(res, err))) :: t(res, err) when res: any, err: any
   def fallback(ok(x), _), do: ok(x)
   def fallback(error(m), f) when is_function(f, 1) do
     f.(m)
   end
-  def fallback(error(_), ok(x)), do: ok(x)
-  def fallback(error(_), error(x)), do: error(x)
+  def fallback(error(_), any), do: any
 
   @doc """
-  Filters collection of results, leaving only ok's
-      [ok(1), error("oops")] |> collect_ok == [ok(1)]
+  Filters and unwraps the collection of results, leaving only ok's
+
+  ## Examples
+      iex> [ok(1), error("oops")] |> collect_ok
+      [1]
   """
   @spec collect_ok([t(res, any)]) :: [res] when res: any
   def collect_ok(results) when is_list(results) do
-    results
-    |> Enum.filter(&is_ok/1)
-    |> Enum.map(&unwrap/1)
+    Enum.reduce(results, [], fn
+      ok(res), acc -> [res | acc]
+      error(_), acc -> acc
+    end) |> Enum.reverse
   end
 
   @doc """
-  Filters collection of results, leaving only errors:
-      [ok(1), error("oops")] |> collect_error == [error("oops")]
+  Filters and unwraps the collection of results, leaving only errors:
+
+  ## Examples
+      iex> [ok(1), error("oops")] |> collect_error
+      ["oops"]
   """
   @spec collect_error([t(res, err)]) :: [err] when res: any, err: any
   def collect_error(results) when is_list(results) do
-    results
-    |> Enum.filter(&is_error/1)
-    |> Enum.map(fn error(m) -> m end)
+    Enum.reduce(results, [], fn
+      ok(_), acc -> acc
+      error(err), acc -> [err | acc]
+    end) |> Enum.reverse
+  end
+
+  @doc """
+  Groups and unwraps the collection of results, forming a Map with keys `:ok` and `:error`:
+
+  ## Examples
+      iex> [ok(1), error("oops"), ok(2)] |> partition
+      %{ok: [1, 2], error: ["oops"]}
+  """
+  @spec partition([t(res, err)]) :: %{ok: [res], error: [err]} when res: any, err: any
+  def partition(results) when is_list(results) do
+    Enum.group_by(results, fn
+      ok(_) -> :ok
+      error(_) -> :error
+    end, fn
+      ok(res) -> res
+      error(err) -> err
+    end)
   end
 
   @doc """
@@ -93,7 +145,7 @@ defmodule MonEx.Result do
     * `:n` - times to retry
     * `:delay` — delay between retries
 
-  ##Example
+  ## Examples
       result = retry n: 3, delay: 3000 do
         remote_service()
       end
@@ -130,21 +182,23 @@ defmodule MonEx.Result do
     * `:message` — returns error message only
     * `:module` — returns error module only
 
-  ##Example
-      try_result do
-        5 + 5
-      end == ok(10)
+  ## Examples
+      iex> try_result do
+      ...>   5 + 5
+      ...> end
+      ok(10)
 
-      try_result do
-        5 / 0
-      end == error(%ArithmeticError{message: "bad argument in arithmetic expression"})
+      iex> try_result do
+      ...>   5 / 0
+      ...> end
+      error(%ArithmeticError{message: "bad argument in arithmetic expression"})
 
-      try_result :message do
-        5 / 0
-      end == error("bad argument in arithmetic expression")
+      iex> try_result :message do
+      ...>  5 / 0
+      ...> end
+      error("bad argument in arithmetic expression")
   """
 
-  # TODO: figure out @spec for this, if it's even possible
   defmacro try_result(mode \\ :full, do: exp) do
     quote do
       try do

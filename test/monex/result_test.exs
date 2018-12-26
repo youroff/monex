@@ -1,6 +1,6 @@
 defmodule MonExResultTest do
   use ExUnit.Case
-  doctest MonEx.Result
+  doctest MonEx.Result, import: true
   import MonEx.Result
   import MonEx
 

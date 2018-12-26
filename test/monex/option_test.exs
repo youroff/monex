@@ -1,6 +1,6 @@
 defmodule MonExOptionTest do
   use ExUnit.Case
-  doctest MonEx.Option
+  doctest MonEx.Option, import: true
   import MonEx.Option
   import MonEx
 
@@ -34,8 +34,8 @@ defmodule MonExOptionTest do
   end
 
   test "or_else" do
-    assert some(5) |> or_else(1) == some(5)
-    assert none() |> or_else(1) == some(1)
+    assert some(5) |> or_else(some(1)) == some(5)
+    assert none() |> or_else(some(1)) == some(1)
     assert none() |> or_else(fn -> some(4) end) == some(4)
   end
 
