@@ -188,18 +188,30 @@ defmodule MonEx.Result do
       ...> end
       ok(10)
 
-      iex> try_result do
-      ...>   5 / 0
+      iex> broken = fn -> raise ArithmeticError, [message: "bad argument"] end
+      ...> try_result do
+      ...>   broken.()
       ...> end
-      error(%ArithmeticError{message: "bad argument in arithmetic expression"})
+      error(%ArithmeticError{message: "bad argument"})
 
-      iex> try_result :message do
-      ...>  5 / 0
+      ...> try_result :message do
+      ...>   broken.()
       ...> end
-      error("bad argument in arithmetic expression")
+      error("bad argument")
+
+      ...> try_result :module do
+      ...>   broken.()
+      ...> end
+      error(ArithmeticError)
   """
 
   defmacro try_result(mode \\ :full, do: exp) do
+    error_handler = case mode do
+      :message -> quote do e -> error(e.message) end
+      :module -> quote do e -> error(e.__struct__) end
+      _ -> quote do e -> error(e) end
+    end
+
     quote do
       try do
         case unquote(exp) do
@@ -208,11 +220,7 @@ defmodule MonEx.Result do
           x -> ok(x)
         end
       rescue
-        e -> case unquote(mode) do
-          :message -> error(e.message)
-          :module -> error(e.__struct__)
-          _ -> error(e)
-        end
+        unquote(error_handler)
       end
     end
   end

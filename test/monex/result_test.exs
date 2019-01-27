@@ -112,11 +112,15 @@ defmodule MonExResultTest do
     end
     assert res == ok(10)
 
+    failing = fn ->
+      raise ArithmeticError, [message: "bad argument in arithmetic expression"]
+    end
+
     res = try_result do
-      5 / 0
+      failing.()
     end
     assert res == error(%ArithmeticError{message: "bad argument in arithmetic expression"})
-    assert error("bad argument in arithmetic expression") == try_result :message, do: 5 / 0
-    assert error(ArithmeticError) == try_result :module, do: 5 / 0
+    assert error("bad argument in arithmetic expression") == try_result :message, do: failing.()
+    assert error(ArithmeticError) == try_result :module, do: failing.()
   end
 end
