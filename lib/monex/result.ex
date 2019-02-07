@@ -3,6 +3,8 @@ defmodule MonEx.Result do
   Result module provides Result type with utility functions.
   """
 
+  alias MonEx.Option
+
   defmacro ok(res) do
     quote do
       {:ok, unquote(res)}
@@ -68,6 +70,22 @@ defmodule MonEx.Result do
   def unwrap(error(m), nil), do: raise m
   def unwrap(error(m), f) when is_function(f, 1), do: f.(m)
   def unwrap(error(_), fallback), do: fallback
+
+  @doc """
+  Converts Result into Option: `ok(val)` -> `some(val)`, `error(e)` -> `none()`.
+  Useful when you don't care about the error value and only what to emphasize that
+  nothing has been found.
+
+  ## Examples
+      iex> unwrap_option(ok(5))
+      {:some, 5} # same as some(5)
+
+      iex> unwrap_option(error(:uh_oh))
+      {:none} # none()
+  """
+  @spec unwrap_option(t(res, any)) :: Option.t(res) when res: any
+  def unwrap_option(ok(x)), do: {:some, x}
+  def unwrap_option(error(_)), do: {:none}
 
   @doc """
   Returns self if it is `ok(x)`, or evaluates supplied lambda that expected

@@ -3,6 +3,8 @@ defmodule MonEx.Option do
   Option module provides Option type with utility functions.
   """
 
+  alias MonEx.Result
+
   defmacro some(val) do
     quote do
       {:some, unquote(val)}
@@ -113,4 +115,24 @@ defmodule MonEx.Option do
     f.()
   end
   def get_or_else(none(), z), do: z
+
+  @doc """
+  Converts an Option into Result if value is present, otherwise returns second argument wrapped in `error()`.
+
+  ## Examples
+      iex> some(5) |> ok_or_else(2)
+      {:ok, 5} # Essentially ok(5)
+
+      ...> none() |> ok_or_else(:missing_value)
+      {:error, :missing_value} # Essentially error(:missing_value)
+
+      ...> none() |> get_or_else(fn -> :oh_no end)
+      {:error, :oh_no}
+  """
+  @spec ok_or_else(t(a), err | (() -> err)) :: Result.t(a, err) when a: any, err: any
+  def ok_or_else(some(x), _), do: {:ok, x}
+  def ok_or_else(none(), f) when is_function(f, 0) do
+    {:error, f.()}
+  end
+  def ok_or_else(none(), z), do: {:error, z}
 end
