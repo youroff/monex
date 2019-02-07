@@ -13,4 +13,3 @@ matrix:
 
 script:
   - mix test
-  - mix dialyzer
