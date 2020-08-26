@@ -144,16 +144,21 @@ defmodule MonEx.Result do
   ## Examples
       iex> [ok(1), error("oops"), ok(2)] |> partition
       %{ok: [1, 2], error: ["oops"]}
+
+      iex> [ok(1)] |> partition
+      %{ok: [1], error: []}
   """
   @spec partition([t(res, err)]) :: %{ok: [res], error: [err]} when res: any, err: any
   def partition(results) when is_list(results) do
-    Enum.group_by(results, fn
+    base = %{ok: [], error: []}
+    results = Enum.group_by(results, fn
       ok(_) -> :ok
       error(_) -> :error
     end, fn
       ok(res) -> res
       error(err) -> err
     end)
+    Map.merge(base, results)
   end
 
   @doc """
