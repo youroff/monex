@@ -17,7 +17,7 @@ defmodule MonEx.Arrows do
       some(10)
 
       ...> none() ~> f
-      some(5)
+      none()
   """
   @spec m(a, b) ~> (a -> c) :: m(c, b) when a: any, b: any, c: any
   def m ~> f, do: MonEx.map(m, f)
