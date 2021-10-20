@@ -15,4 +15,11 @@ defmodule MonExArrowsTest do
     assert ok(5) ~>> &(ok(&1 * 2)) == ok(10)
     assert error("Error") ~>> &(ok(&1 * 2)) == error("Error")
   end
+
+  test "chaining ~>>" do
+    res = ok(5)
+    ~>> (&ok(&1 * 2))
+    ~>> (&ok(&1 * 2))
+    assert res == ok(20)
+  end
 end
