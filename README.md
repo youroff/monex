@@ -1,6 +1,8 @@
 # Monex
 
-[![Build Status](https://travis-ci.org/youroff/monex.svg?branch=master)](https://travis-ci.org/youroff/monex)
+[![CI](https://github.com/youroff/monex/actions/workflows/ci.yml/badge.svg)](https://github.com/youroff/monex/actions/workflows/ci.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/monex.svg)](https://hex.pm/packages/monex)
+[![HexDocs](https://img.shields.io/badge/docs-hexdocs-blue.svg)](https://hexdocs.pm/monex)
 
 MonEx implements two most common monadic data types:
 
@@ -60,6 +62,36 @@ will be transformed into posts, or `none()` will be returned.
 
 See docs per Result and Option modules for details. [docs](https://hexdocs.pm/monex/api-reference.html).
 
+## Ecto
+
+`MonEx.Ecto` adds Repo extensions that integrate naturally with MonEx types.
+`:ecto` is declared as an optional dependency, so you only pull it in when you opt in.
+
+Add it to your Repo:
+
+    defmodule MyApp.Repo do
+      use Ecto.Repo, otp_app: :my_app, adapter: Ecto.Adapters.Postgres
+      use MonEx.Ecto
+    end
+
+That gives you `option`-returning lookups in place of the `nil`-returning ones:
+
+    import MonEx.Option
+
+    MyApp.Repo.get_option(User, user_id)        # some(%User{}) | none()
+    MyApp.Repo.get_by_option(User, email: addr) # some(%User{}) | none()
+    MyApp.Repo.one_option(query)                # some(row)     | none()
+
+And `repack_multi/2` for normalizing `Repo.transaction(multi)` results into a `MonEx.Result`:
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:user, changeset)
+    |> MyApp.Repo.transaction()
+    |> MyApp.Repo.repack_multi(error: :value, result: :user)
+    # => ok(%User{}) | error(%Ecto.Changeset{})
+
+`MonEx.Ecto.supported_types/0` returns the list of MonEx types this extension produces (`[MonEx.Option, MonEx.Result]`).
+
 ## Installation
 
 The package can be installed as:
@@ -68,6 +100,12 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:monex, "~> 0.1.0"}]
+      [{:monex, "~> 0.2"}]
     end
+    ```
+
+  2. (Optional) If you want to use `MonEx.Ecto`, also add Ecto to your deps:
+
+    ```elixir
+    {:ecto, "~> 3.10"}
     ```
