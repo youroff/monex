@@ -26,18 +26,6 @@ defmodule MonEx.Ecto do
 
   import MonEx.Result, only: [ok: 1, error: 1]
 
-  @supported_types [MonEx.Option, MonEx.Result]
-
-  @doc """
-  Returns the MonEx types this extension produces.
-
-  ## Examples
-      iex> MonEx.Ecto.supported_types()
-      [MonEx.Option, MonEx.Result]
-  """
-  @spec supported_types() :: [module]
-  def supported_types, do: @supported_types
-
   @doc false
   defmacro __using__(_opts) do
     quote do

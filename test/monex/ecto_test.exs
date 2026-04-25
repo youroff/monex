@@ -11,12 +11,6 @@ defmodule MonExEctoTest do
   import MonEx.Result
   alias MonEx.Ecto, as: ME
 
-  describe "supported_types/0" do
-    test "lists Option and Result" do
-      assert ME.supported_types() == [MonEx.Option, MonEx.Result]
-    end
-  end
-
   describe "repack_multi/2 on success" do
     test "default :all returns the changes map wrapped in ok" do
       assert ME.repack_multi({:ok, %{a: 1, b: 2}}) == ok(%{a: 1, b: 2})
