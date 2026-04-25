@@ -259,21 +259,27 @@ defmodule MonEx.Result do
 
   defmacro try_result(mode \\ :full, do: exp) do
     error_handler = case mode do
-      :message -> quote do e -> error(e.message) end
+      :message -> quote do e -> error(Exception.message(e)) end
       :module -> quote do e -> error(e.__struct__) end
       _ -> quote do e -> error(e) end
     end
 
     quote do
       try do
-        case unquote(exp) do
-          ok(res) -> ok(res)
-          error(e) -> error(e)
-          x -> ok(x)
-        end
+        MonEx.Result.__try_result__(fn -> unquote(exp) end)
       rescue
         unquote(error_handler)
       end
+    end
+  end
+
+  @doc false
+  @spec __try_result__((-> any)) :: t(any, any)
+  def __try_result__(fun) when is_function(fun, 0) do
+    case fun.() do
+      {:ok, _} = res -> res
+      {:error, _} = err -> err
+      x -> {:ok, x}
     end
   end
 end
