@@ -1,16 +1,31 @@
 defmodule MonEx.Result do
   @moduledoc """
-  Result module provides Result type with utility functions.
+  A `Result` represents the outcome of an operation that can fail:
+
+    * `ok(value)` — success, carrying a value
+    * `error(reason)` — failure, carrying a reason
+
+  The runtime representation is just an idiomatic Elixir tuple
+  (`{:ok, value}` or `{:error, reason}`), so MonEx slots in on top of any
+  function that already returns those.
   """
 
   alias MonEx.Option
 
+  @doc """
+  Constructor macro: `ok(res)` expands to `{:ok, res}`. Works in both
+  expressions and patterns.
+  """
   defmacro ok(res) do
     quote do
       {:ok, unquote(res)}
     end
   end
 
+  @doc """
+  Constructor macro: `error(err)` expands to `{:error, err}`. Works in
+  both expressions and patterns.
+  """
   defmacro error(err) do
     quote do
       {:error, unquote(err)}
@@ -19,18 +34,18 @@ defmodule MonEx.Result do
 
   @typedoc """
   Result type.
-  `ok(res)` or `error(err)` unwraps into `{:ok, res}` or `{:error, err}`
+  `ok(res)` and `error(err)` expand to `{:ok, res}` and `{:error, err}` respectively.
   """
   @type t(res, err) :: {:ok, res} | {:error, err}
 
   @doc """
-  Returns true if argument is `ok()`, false if `error()`
+  Returns `true` if the argument is `ok()`, `false` if `error()`.
 
   ## Examples
       iex> is_ok(ok(5))
       true
 
-      iex> is_error(ok(5))
+      iex> is_ok(error("Error"))
       false
   """
   @spec is_ok(t(any, any)) :: boolean
@@ -38,21 +53,25 @@ defmodule MonEx.Result do
   def is_ok(error(_)), do: false
 
   @doc """
-  Returns true if argument is `error()`, false if `ok()`
+  Returns `true` if the argument is `error()`, `false` if `ok()`.
 
   ## Examples
       iex> is_error(error("Error"))
       true
 
-      iex> is_ok(error("Error"))
+      iex> is_error(ok(5))
       false
   """
   @spec is_error(t(any, any)) :: boolean
   def is_error(x), do: !is_ok(x)
 
   @doc """
-  Returns value `x` if argument is `ok(x)`, raises `e` if `error(e)`.
-  Second argument is a fallback. It can by a lambda accepting error, or some precomputed default value.
+  Returns `x` if the argument is `ok(x)`. Otherwise consults the second
+  argument:
+
+    * a 1-arity function — called with the error term; its return is returned
+    * any other non-`nil` value — returned as-is
+    * `nil` (the default, when no fallback is supplied) — re-raises the error term
 
   ## Examples
       iex> unwrap(ok(5))
@@ -72,24 +91,25 @@ defmodule MonEx.Result do
   def unwrap(error(_), fallback), do: fallback
 
   @doc """
-  Converts Result into Option: `ok(val)` -> `some(val)`, `error(e)` -> `none()`.
-  Useful when you don't care about the error value and only what to emphasize that
-  nothing has been found.
+  Converts a `Result` into an `Option`: `ok(val)` becomes `some(val)`,
+  `error(_)` becomes `none()`. Useful when you only care whether a value
+  is present and want to drop the error reason.
 
   ## Examples
       iex> unwrap_option(ok(5))
       {:some, 5} # same as some(5)
 
       iex> unwrap_option(error(:uh_oh))
-      {:none} # none()
+      {:none} # same as none()
   """
   @spec unwrap_option(t(res, any)) :: Option.t(res) when res: any
   def unwrap_option(ok(x)), do: {:some, x}
   def unwrap_option(error(_)), do: {:none}
 
   @doc """
-  Returns self if it is `ok(x)`, or evaluates supplied lambda that expected
-  to return another `result`. Returns supplied fallback result, if second argument is not a function.
+  Returns the input as-is if it is `ok()`. If `error()`, returns the
+  second argument — either a `Result` directly, or a 1-arity function
+  receiving the error and returning a `Result`.
 
   ## Examples
       iex> ok(5) |> fallback(fn _ -> 1 end)
@@ -109,7 +129,8 @@ defmodule MonEx.Result do
   def fallback(error(_), any), do: any
 
   @doc """
-  Filters and unwraps the collection of results, leaving only ok's
+  Walks a list of `Result`s and returns the unwrapped success values,
+  preserving order.
 
   ## Examples
       iex> [ok(1), error("oops")] |> collect_ok
@@ -124,7 +145,8 @@ defmodule MonEx.Result do
   end
 
   @doc """
-  Filters and unwraps the collection of results, leaving only errors:
+  Walks a list of `Result`s and returns the unwrapped error reasons,
+  preserving order.
 
   ## Examples
       iex> [ok(1), error("oops")] |> collect_error
@@ -139,7 +161,9 @@ defmodule MonEx.Result do
   end
 
   @doc """
-  Groups and unwraps the collection of results, forming a Map with keys `:ok` and `:error`:
+  Splits a list of `Result`s into a map with `:ok` and `:error` keys
+  pointing at the unwrapped values. Both keys are always present, even
+  when one bucket is empty.
 
   ## Examples
       iex> [ok(1), error("oops"), ok(2)] |> partition
@@ -162,18 +186,21 @@ defmodule MonEx.Result do
   end
 
   @doc """
-  Retry in case of error.
+  Re-runs the body block while it returns `error(_)`. The first `ok(_)`
+  short-circuits and is returned; if every attempt fails, the last
+  `error(_)` is returned.
 
-  Possible options:
-    * `:n` - times to retry
-    * `:delay` — delay between retries
+  ## Options
+    * `:n` — number of retries to attempt after the initial call (default: `5`)
+    * `:delay` — milliseconds to sleep between attempts (default: `0`)
 
-  ## Examples
+  ## Example
       result = retry n: 3, delay: 3000 do
         remote_service()
       end
 
-  This will call `remove_service()` 4 times (1 time + 3 retries) with an interval of 3 seconds.
+  Calls `remote_service()` up to 4 times (1 initial + 3 retries) with a
+  3-second pause between attempts.
   """
   defmacro retry(opts \\ [], do: exp) do
     quote do
@@ -196,14 +223,17 @@ defmodule MonEx.Result do
   end
 
   @doc """
-  Wraps expression and returns exception wrapped into `error()` if it happens,
-  otherwise `ok(result of expression)`, in case if expression returns result
-  type, it won't be wrapped.
+  Evaluates `exp`, normalising the outcome into a `Result`:
 
-  Possible modes:
-    * `:full` - returns exception struct intact (default)
-    * `:message` — returns error message only
-    * `:module` — returns error module only
+    * a raised exception becomes `error(...)`,
+    * a `Result` (`ok(_)` or `error(_)`) returned by `exp` is passed
+      through unchanged,
+    * any other value `x` becomes `ok(x)`.
+
+  ## Modes
+    * `:full` (default) — `error(...)` carries the exception struct
+    * `:message` — `error(...)` carries the exception message string
+    * `:module` — `error(...)` carries the exception module
 
   ## Examples
       iex> try_result do
@@ -211,19 +241,18 @@ defmodule MonEx.Result do
       ...> end
       ok(10)
 
-      iex> broken = fn -> raise ArithmeticError, [message: "bad argument"] end
-      ...> try_result do
-      ...>   broken.()
+      iex> try_result do
+      ...>   raise ArithmeticError, message: "bad argument"
       ...> end
       error(%ArithmeticError{message: "bad argument"})
 
-      ...> try_result :message do
-      ...>   broken.()
+      iex> try_result :message do
+      ...>   raise ArithmeticError, message: "bad argument"
       ...> end
       error("bad argument")
 
-      ...> try_result :module do
-      ...>   broken.()
+      iex> try_result :module do
+      ...>   raise ArithmeticError, message: "bad argument"
       ...> end
       error(ArithmeticError)
   """

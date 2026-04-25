@@ -1,16 +1,31 @@
 defmodule MonEx.Option do
   @moduledoc """
-  Option module provides Option type with utility functions.
+  An `Option` represents a value that may or may not be present:
+
+    * `some(value)` — a value is present
+    * `none()` — no value
+
+  Pattern matching on either form requires the parentheses. The runtime
+  representation is just a tuple (`{:some, value}` or `{:none}`), so it
+  costs nothing.
   """
 
   alias MonEx.Result
 
+  @doc """
+  Constructor macro: `some(val)` expands to `{:some, val}`. Works in both
+  expressions and patterns.
+  """
   defmacro some(val) do
     quote do
       {:some, unquote(val)}
     end
   end
 
+  @doc """
+  Constructor macro: `none()` expands to `{:none}`. Works in both
+  expressions and patterns.
+  """
   defmacro none do
     quote do
       {:none}
@@ -19,12 +34,12 @@ defmodule MonEx.Option do
 
   @typedoc """
   Option type.
-  `some(a)` or `none()` unwraps into `{:some, a}` or `{:none}`
+  `some(a)` and `none()` expand to `{:some, a}` and `{:none}` respectively.
   """
   @type t(a) :: {:some, a} | {:none}
 
   @doc """
-  Returns true if argument is `some()` false if `none()`
+  Returns `true` if the argument is `some()`, `false` if `none()`.
 
   ## Examples
       iex> is_some(some(5))
@@ -38,7 +53,7 @@ defmodule MonEx.Option do
   def is_some(none()), do: false
 
   @doc """
-  Returns true if argument is `none()` false if `some()`
+  Returns `true` if the argument is `none()`, `false` if `some()`.
 
   ## Examples
       iex> is_none(none())
@@ -51,7 +66,8 @@ defmodule MonEx.Option do
   def is_none(x), do: !is_some(x)
 
   @doc """
-  Converts arbitrary term into option, `some(term)` if not nil, `none()` otherwise
+  Lifts an arbitrary term into an `Option`: `some(term)` if non-`nil`,
+  `none()` otherwise.
 
   ## Examples
       iex> to_option(5)
@@ -65,8 +81,9 @@ defmodule MonEx.Option do
   def to_option(x), do: some(x)
 
   @doc """
-  Returns option if argument is `some()`, second argument which has to be option otherwise.
-  Executes function, if it's supplied.
+  Returns the input as-is if it is `some()`. If `none()`, returns the
+  second argument — either an `Option` directly, or a 0-arity function
+  returning one.
 
   ## Examples
       iex> some(5) |> or_else(some(2))
@@ -86,7 +103,8 @@ defmodule MonEx.Option do
   def or_else(none(), z), do: z
 
   @doc """
-  Returns content of option if argument is some(), raises otherwise
+  Returns the wrapped value if the argument is `some()`. If `none()`,
+  raises a `RuntimeError` with the message `"Can't get value of None"`.
 
   ## Examples
       iex> some(5) |> get
@@ -97,7 +115,9 @@ defmodule MonEx.Option do
   def get(none()), do: raise "Can't get value of None"
 
   @doc """
-  Returns content of option if argument is some(), second argument otherwise.
+  Returns the wrapped value if the argument is `some()`. If `none()`,
+  returns the second argument — either a value directly, or a 0-arity
+  function returning one.
 
   ## Examples
       iex> some(5) |> get_or_else(2)
@@ -117,16 +137,18 @@ defmodule MonEx.Option do
   def get_or_else(none(), z), do: z
 
   @doc """
-  Converts an Option into Result if value is present, otherwise returns second argument wrapped in `error()`.
+  Converts an `Option` into a `Result`. `some(val)` becomes `ok(val)`;
+  `none()` becomes `error(...)` carrying the second argument (or the
+  result of calling it, if a 0-arity function is supplied).
 
   ## Examples
       iex> some(5) |> ok_or_else(2)
-      {:ok, 5} # Essentially ok(5)
+      {:ok, 5} # same as ok(5)
 
-      ...> none() |> ok_or_else(:missing_value)
-      {:error, :missing_value} # Essentially error(:missing_value)
+      iex> none() |> ok_or_else(:missing_value)
+      {:error, :missing_value} # same as error(:missing_value)
 
-      ...> none() |> get_or_else(fn -> :oh_no end)
+      iex> none() |> ok_or_else(fn -> :oh_no end)
       {:error, :oh_no}
   """
   @spec ok_or_else(t(a), err | (() -> err)) :: Result.t(a, err) when a: any, err: any
