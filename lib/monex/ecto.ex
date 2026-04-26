@@ -51,7 +51,7 @@ defmodule MonEx.Ecto do
       """
       @spec get_option(Ecto.Queryable.t, term, Keyword.t) :: MonEx.Option.t(Ecto.Schema.t)
       def get_option(queryable, id, opts \\ [])
-      def get_option(_, nil, _), do: MonEx.Option.none()
+      def get_option(_, nil, _), do: none()
       def get_option(queryable, id, opts) do
         get(queryable, id, opts) |> MonEx.Option.to_option()
       end
