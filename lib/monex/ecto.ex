@@ -32,6 +32,9 @@ defmodule MonEx.Ecto do
   @doc false
   defmacro __using__(_opts) do
     quote do
+      import MonEx.Option, only: [some: 1, none: 0]
+      import MonEx.Result, only: [ok: 1, error: 1]
+
       @doc """
       Calls `c:Ecto.Repo.one/2` and lifts the result into `MonEx.Option`.
       `nil` becomes `none()`, a row becomes `some(row)`.
