@@ -32,8 +32,7 @@ defmodule MonEx.Ecto do
   @doc false
   defmacro __using__(_opts) do
     quote do
-      import MonEx.Option, only: [some: 1, none: 0]
-      import MonEx.Result, only: [ok: 1, error: 1]
+      require MonEx.Option
 
       @doc """
       Calls `c:Ecto.Repo.one/2` and lifts the result into `MonEx.Option`.
@@ -51,7 +50,7 @@ defmodule MonEx.Ecto do
       """
       @spec get_option(Ecto.Queryable.t, term, Keyword.t) :: MonEx.Option.t(Ecto.Schema.t)
       def get_option(queryable, id, opts \\ [])
-      def get_option(_, nil, _), do: none()
+      def get_option(_, nil, _), do: MonEx.Option.none()
       def get_option(queryable, id, opts) do
         get(queryable, id, opts) |> MonEx.Option.to_option()
       end
