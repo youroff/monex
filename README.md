@@ -104,6 +104,15 @@ Ecto.Multi.new()
 # => ok(%User{}) | error(%Ecto.Changeset{})
 ```
 
+## Laws
+
+The pure `Result` and `Option` combinators have [Lynx](https://github.com/josevalim/lynx) laws in `test/laws`. Lynx is a test dependency, and compiling it needs [Elan](https://github.com/leanprover/elan), with `lake` on `PATH`:
+
+```console
+mix deps.get
+mix test --only laws
+```
+
 ## Installation
 
 Add `monex` to your list of dependencies in `mix.exs`:
