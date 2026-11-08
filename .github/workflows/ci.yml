@@ -14,8 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: "1.15"
-            otp: "26"
           - elixir: "1.18"
             otp: "27"
           - elixir: "1.19"
@@ -32,6 +30,11 @@ jobs:
         with:
           elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
+
+      - name: Install Elan
+        run: |
+          curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
       - name: Cache deps and _build
         uses: actions/cache@v5
@@ -50,4 +53,39 @@ jobs:
         run: mix compile --warnings-as-errors
 
       - name: Run tests
-        run: mix test
+        run: mix test --exclude laws
+
+  laws:
+    name: laws (Elixir 1.19.5 / OTP 28)
+    runs-on: ubuntu-latest
+
+    env:
+      MIX_ENV: test
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Elixir / OTP
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19.5"
+          otp-version: "28"
+
+      - name: Install Elan
+        run: |
+          curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Cache deps and _build
+        uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+          key: laws-${{ runner.os }}-1.19.5-28-${{ hashFiles('mix.lock') }}
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Run laws
+        run: mix test --only laws
